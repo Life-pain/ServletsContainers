@@ -7,11 +7,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 // Stub
 public class PostRepository {
     private ConcurrentHashMap<Long, Post> postsList = new ConcurrentHashMap<>();
-    private Long postCounter = 0L;
+    private AtomicLong postCounter = new AtomicLong(0L);
 
     public List<Post> all() {
         if (postsList.isEmpty()) throw new NotFoundException("Постов нет");
@@ -25,10 +26,9 @@ public class PostRepository {
     public Post save(Post post) {
         long id = post.getId();
         if (id == 0) {
-            synchronized (postCounter) {
-                post.setId(++postCounter);
-                postsList.put(postCounter, post);
-            }
+            postCounter.getAndIncrement();
+            post.setId(postCounter.get());
+            postsList.put(postCounter.get(), post);
         } else {
             if (postsList.containsKey(id)) postsList.get(id).setContent(post.getContent());
             else {
